@@ -1,5 +1,6 @@
 #pragma once
 #include "Util.hpp"
+
 namespace plugin {
 
     class Vars {
@@ -14,14 +15,14 @@ namespace plugin {
             static void Update() {
                 if (ShouldUpdate) {
                     Ongoing = true;
-                    bool diving = UpdateDivingState();
-                    logger::info("Diving Set: {}", diving);
+                    /*bool diving = */UpdateDivingState();
+                    //logger::info("Diving Set: {}", diving);
 
-                    std::jthread([]() {
+                    _THREAD_POOL.enqueue([]() {
                         std::this_thread::sleep_for(std::chrono::milliseconds(10));
                         //logger::info("Updating...");
                         SKSE::GetTaskInterface()->AddTask([] { Update(); });
-                    }).detach();
+                    });
                 }
                 else {
                     Ongoing = false;

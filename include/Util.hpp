@@ -73,14 +73,14 @@ float RayCast(RE::NiPoint3 rayStart, RE::NiPoint3 rayDir, float maxDist, RE::hkV
 bool UpdateDivingState() {
     auto *player = RE::PlayerCharacter::GetSingleton();
     if (!player) {
-        logger::info("No player error");
+        //logger::info("No player error");
         return false;
     }
 
     if (plugin::Compatibility::SkyParkour) {
         int32_t out;
         if (player->GetGraphVariableInt("SkyParkourLedge", out) && out != -1) {
-            logger::info("SkyParkour Ledge available");
+            //logger::info("SkyParkour Ledge available");
             return false;
         }
     }
@@ -91,7 +91,7 @@ bool UpdateDivingState() {
         cell->GetWaterHeight(pos, waterZ);
     }
     else {
-        logger::info("Water pos error");
+        //logger::info("Water pos error");
         return false;
     }
 
@@ -104,7 +104,7 @@ bool UpdateDivingState() {
     if (waterZ == -RE::NI_INFINITY) {
         // no water here → definitely not diving
         player->SetGraphVariableInt("bSimpleDiving_IsDiving", 0);
-        logger::info("set false");
+        //logger::info("set false");
         return true;
     }
 
@@ -121,10 +121,10 @@ bool UpdateDivingState() {
         if (hitDist > 0.0f && abs(gap + playerH + 50 /** PlayerScale*/) < abs(hitDist) && normal.quad.m128_f32[2] > 0.8f) {
             dive = 1;
         }
-        logger::info("hit {} - Water {}", hitDist, gap + playerH);
+        //logger::info("hit {} - Water {}", hitDist, gap + playerH);
     }
 
     player->SetGraphVariableInt("bSimpleDiving_IsDiving", dive);
-    logger::info("set {}", dive);
+    //logger::info("set {}", dive);
     return true;
 }

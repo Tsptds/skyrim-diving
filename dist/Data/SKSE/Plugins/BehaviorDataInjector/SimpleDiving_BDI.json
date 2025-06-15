@@ -1,0 +1,8 @@
+[
+	{
+        "projectPath": "actors\\Character",
+        "type": "kInt",
+        "name": "bSimpleDiving_IsDiving",
+        "value": 0
+    }
+]

@@ -15,11 +15,11 @@ namespace Hooks {
 
                         if (a_event->tag == "JumpFall" || a_event->tag == "JumpFallDirectional") {
                             plugin::Vars::SetValid(true);
-                            logger::info("True");
+                            //logger::info("True");
                         }
                         else if (a_event->tag == "JumpLandEnd") {
                             plugin::Vars::SetValid(false);
-                            logger::info("False");
+                            //logger::info("False");
                         }
                     }
                 }
@@ -85,7 +85,7 @@ bool Hooks::NotifyGraphHandler::OnCharacter(RE::IAnimationGraphManagerHolder* a_
 bool Hooks::NotifyGraphHandler::OnPlayerCharacter(RE::IAnimationGraphManagerHolder* a_this, const RE::BSFixedString& a_eventName) {
     if (a_eventName == "swimStart" || a_eventName == "JumpLandEnd") {
         plugin::Vars::SetValid(false);
-        logger::info("False");
+        //logger::info("False");
     }
     return _origPlayerCharacter(a_this, a_eventName);
 }

@@ -139,6 +139,7 @@
 
 #define PLUGIN_LOGPATTERN_DEFAULT "[%b %d %H:%M:%S.%e] [%l] [%t] %v"
 #define PLUGIN_LOGPATTERN_DEBUG "[%b %d %H:%M:%S.%e] [%l] [%t] [%s:%#] %v"
+#define PLUGIN_LOGPATTERN_MINIMAL "[%H:%M:%S.%e] [%l] %v"
 
 //commonlibsse-ng and skse
 #include <RE/Skyrim.h>
@@ -152,9 +153,6 @@
 #if DETOURS_LIBRARY
 #include <detours/detours.h>
 #endif
-
-//local
-#include "Util.h"
 
 #undef cdecl  // Workaround for Clang 14 CMake configure error.
 

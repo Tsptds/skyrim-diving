@@ -1,12 +1,12 @@
 cmake_minimum_required(VERSION 3.25)
 
 project(
-        Template
-        VERSION 0.0.1
+        Diving
+        VERSION 1.0.0
         LANGUAGES CXX)
 set(PROJECT_LICENSE "MIT")
 set(PROJECT_FRIENDLY_NAME ${PROJECT_NAME})
-set(PROJECT_LONG_NAME "Template CommonLibSSE-NG")
+set(PROJECT_LONG_NAME "Skyrim Diving CommonLibSSE-NG")
 set(PROJECT_DESCRIPTION ${PROJECT_LONG_NAME})
 set(PROJECT_COPYRIGHT "Copyright")
 

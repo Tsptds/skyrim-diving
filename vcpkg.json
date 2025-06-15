@@ -1,14 +1,20 @@
 {
   "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg-tool/main/docs/vcpkg.schema.json",
-  "name": "skse-clibng-template",
-  "version-string": "0.0.1",
-  "description": "SKSE CommonLibSSE-NG Template",
-  "homepage": "https://github.com/epinter/skse-clibng-template",
+  "name": "skyrim-diving",
+  "version-string": "1.0.0",
+  "description": "Skyrim Diving Mod",
+  "homepage": "https://github.com/Tsptds/skyrim-diving",
   "features": {
     "plugin": {
-      "description": "SKSE plugin",
+      "description": "Diving Mod for skyrim special edition",
       "dependencies": [
-        "commonlibsse-ng",
+        {
+          "name": "vcpkg-cmake-config",
+          "host": true
+        },
+		"directxmath",
+        "directxtk",
+        "rapidcsv",
         "spdlog",
         "boost-algorithm"
       ]

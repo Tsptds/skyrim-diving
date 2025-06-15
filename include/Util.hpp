@@ -70,6 +70,18 @@ float RayCast(RE::NiPoint3 rayStart, RE::NiPoint3 rayDir, float maxDist, RE::hkV
     return maxDist;
 }
 
+RE::NiPoint3 GetPlayerDirFlat(RE::Actor *player) {
+    // Calculate player forward direction (normalized)
+    const float playerYaw = player->data.angle.z;  // Player's yaw
+
+    RE::NiPoint3 playerDirFlat{std::sin(playerYaw), std::cos(playerYaw), 0};
+    const float dirMagnitude = std::hypot(playerDirFlat.x, playerDirFlat.y);
+    playerDirFlat.x /= dirMagnitude;
+    playerDirFlat.y /= dirMagnitude;
+
+    return playerDirFlat;
+}
+
 bool UpdateDivingState() {
     auto *player = RE::PlayerCharacter::GetSingleton();
     if (!player) {
@@ -114,7 +126,10 @@ bool UpdateDivingState() {
         // precompute player height
         float playerH = 120.0f /** PlayerScale*/;
         RE::hkVector4 normal;
-        float hitDist = RayCast(pos + RE::NiPoint3{0, 0, playerH}, RE::NiPoint3{0, 0, -1}, playerH * 10.0f, normal, RE::COL_LAYER::kLOS);
+        auto facing = GetPlayerDirFlat(player);
+
+        float hitDist = RayCast(pos + RE::NiPoint3{facing.x + 10, facing.y + 10, playerH}, RE::NiPoint3{0, 0, -1}, playerH * 10.0f, normal,
+                                RE::COL_LAYER::kLOS);
 
         // require the ray actually hit something above the water AND that that
         // distance is greater than your gap, AND that hit surface is roughly flat

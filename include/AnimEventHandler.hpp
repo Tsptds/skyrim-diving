@@ -1,8 +1,8 @@
 ﻿#include "Runtime.hpp"
 namespace Hooks {
     std::unordered_set<std::string_view> AnimEvents{"JumpFall", "JumpFallDirectional", "JumpUp", "JumpDown", "JumpLand", "JumpLandEnd"};
-    std::unordered_set<std::string_view> NotifyEvents{"JumpFall", "JumpFallDirectional", "SwimStart", "SwimStop",
-                                                      "JumpLand", "JumpLandEnd"};
+    std::unordered_set<std::string_view> NotifyEvents{
+        "JumpStandingStart", "JumpDirectionalStart", "JumpFall", "JumpFallDirectional", "SwimStart", "SwimStop", "JumpLand", "JumpLandEnd"};
 
     template <class T>
     class AnimationEventHook : public T {
@@ -24,7 +24,6 @@ namespace Hooks {
                 return _ProcessEvent(this, a_event, a_eventSource);
             }
             static void InstallAnimEventHook() {
-                // Hooking the vfunc directly
                 auto vtbl = REL::Relocation<std::uintptr_t>(RE::VTABLE_BSAnimationGraphManager[0]);
                 constexpr std::size_t idx = 0x1;
                 _ProcessEvent = vtbl.write_vfunc(idx, &Hook);
@@ -39,7 +38,7 @@ namespace Hooks {
             static void InstallGraphNotifyHook();
 
         private:
-            // Our hook callbacks
+            // Callbacks
             static bool OnTESObjectREFR(RE::IAnimationGraphManagerHolder* a_this, const RE::BSFixedString& a_eventName);
             static bool OnCharacter(RE::IAnimationGraphManagerHolder* a_this, const RE::BSFixedString& a_eventName);
             static bool OnPlayerCharacter(RE::IAnimationGraphManagerHolder* a_this, const RE::BSFixedString& a_eventName);

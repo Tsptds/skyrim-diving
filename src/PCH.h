@@ -160,7 +160,3 @@
 
 using namespace std::literals;
 namespace logger = SKSE::log;
-// local
-#include "ThreadPool.hpp"
-static ThreadPool SIMPLE_DIVING_THREAD_POOL;
-#define _THREAD_POOL SIMPLE_DIVING_THREAD_POOL

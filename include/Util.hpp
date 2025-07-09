@@ -1,5 +1,4 @@
 ﻿#pragma once
-#include "Compatibility.h"
 
 float RayCast(RE::NiPoint3 rayStart, RE::NiPoint3 rayDir, float maxDist, RE::hkVector4 &normalOut, RE::COL_LAYER layerMask) {
     const auto player = RE::PlayerCharacter::GetSingleton();
@@ -73,7 +72,7 @@ float RayCast(RE::NiPoint3 rayStart, RE::NiPoint3 rayDir, float maxDist, RE::hkV
 RE::NiPoint3 GetPlayerDirFlat(RE::Actor *player) {
     // Calculate player forward direction (normalized)
     const float playerYaw = player->data.angle.z;  // Player's yaw
-
+    //_THREAD_POOL
     RE::NiPoint3 playerDirFlat{std::sin(playerYaw), std::cos(playerYaw), 0};
     const float dirMagnitude = std::hypot(playerDirFlat.x, playerDirFlat.y);
     playerDirFlat.x /= dirMagnitude;
@@ -87,14 +86,6 @@ bool UpdateDivingState() {
     if (!player) {
         //logger::info("No player error");
         return false;
-    }
-
-    if (plugin::Compatibility::SkyParkour) {
-        int32_t out;
-        if (player->GetGraphVariableInt("SkyParkourLedge", out) && out != -1) {
-            //logger::info("SkyParkour Ledge available");
-            return false;
-        }
     }
 
     auto pos = player->GetPosition();

@@ -4,7 +4,6 @@ using namespace SKSE::stl;
 
 #include "Plugin.h"
 #include "AnimEventHandler.hpp"
-#include "Compatibility.h"
 
 namespace plugin {
     std::optional<std::filesystem::path> getLogDirectory() {
@@ -58,12 +57,7 @@ namespace plugin {
 
     void MessageEvent(SKSE::MessagingInterface::Message *message) {
         if (message->type == SKSE::MessagingInterface::kPostPostLoad) {
-            if (GetModuleHandleA("SkyParkourNG.dll")) {
-                Compatibility::SkyParkour = true;
-                logger::info("SkyParkour Detected & Patched");
-            }
             Hooks::AnimationEventHook<RE::BSAnimationGraphManager>::InstallAnimEventHook();
-            Hooks::NotifyGraphHandler::InstallGraphNotifyHook();
         }
     }  // namespace plugin
 

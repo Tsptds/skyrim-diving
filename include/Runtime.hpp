@@ -3,15 +3,23 @@
 
 namespace plugin {
 
-    class Funcs {
+    class Diving {
         public:
             static void Update() {
-                /*bool diving = */ UpdateDivingState();
-                //logger::info("Diving Set: {}", diving);
+                bool res = UpdateDivingState(player);
+                logger::info("Diving >> {}", res ? "Yes" : "No");
+                player->SetGraphVariableInt("bSimpleDiving_IsDiving", res);
+                // later: use *dirPtr after the thread finishes (sync if needed)
             }
 
-            Funcs() = default;
-            ~Funcs() = default;
+            Diving() = default;
+            ~Diving() = default;
+
+            static void SetPlayerRef(RE::Actor *in) {
+                player = in;
+            }
+            /* Get This Once */
+            inline static RE::Actor *player;
     };
 
 }  // namespace plugin

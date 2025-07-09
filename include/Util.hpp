@@ -1,7 +1,7 @@
 ﻿#pragma once
 
-float RayCast(RE::NiPoint3 rayStart, RE::NiPoint3 rayDir, float maxDist, RE::hkVector4 &normalOut, RE::COL_LAYER layerMask) {
-    const auto player = RE::PlayerCharacter::GetSingleton();
+float RayCast(RE::Actor *player, RE::NiPoint3 rayStart, RE::NiPoint3 rayDir, float maxDist, RE::hkVector4 &normalOut,
+              RE::COL_LAYER layerMask) {
     if (!player) {
         normalOut = RE::hkVector4(0.0f, 0.0f, 0.0f, 0.0f);
         return maxDist;  // Return maxDist if player is null
@@ -69,22 +69,8 @@ float RayCast(RE::NiPoint3 rayStart, RE::NiPoint3 rayDir, float maxDist, RE::hkV
     return maxDist;
 }
 
-RE::NiPoint3 GetPlayerDirFlat(RE::Actor *player) {
-    // Calculate player forward direction (normalized)
-    const float playerYaw = player->data.angle.z;  // Player's yaw
-    //_THREAD_POOL
-    RE::NiPoint3 playerDirFlat{std::sin(playerYaw), std::cos(playerYaw), 0};
-    const float dirMagnitude = std::hypot(playerDirFlat.x, playerDirFlat.y);
-    playerDirFlat.x /= dirMagnitude;
-    playerDirFlat.y /= dirMagnitude;
-
-    return playerDirFlat;
-}
-
-bool UpdateDivingState() {
-    auto *player = RE::PlayerCharacter::GetSingleton();
+bool UpdateDivingState(RE::Actor *player) {
     if (!player) {
-        //logger::info("No player error");
         return false;
     }
 
@@ -106,31 +92,27 @@ bool UpdateDivingState() {
 
     if (waterZ == -RE::NI_INFINITY) {
         // no water here → definitely not diving
-        player->SetGraphVariableInt("bSimpleDiving_IsDiving", 0);
         //logger::info("set false");
-        return true;
+        return false;
     }
 
     float gap = pos.z - waterZ;
-    int dive = 0;
     if (gap > 0.0f) {
         // precompute player height
-        float playerH = 120.0f /** PlayerScale*/;
+        constexpr float playerH = 120.0f /** PlayerScale*/;
+        constexpr float maxCheck = playerH * 1000.0f;
+        constexpr RE::NiPoint3 rayDir{0, 0, -1};
         RE::hkVector4 normal;
-        auto facing = GetPlayerDirFlat(player);
 
-        float hitDist = RayCast(pos + RE::NiPoint3{facing.x + 10, facing.y + 10, playerH}, RE::NiPoint3{0, 0, -1}, playerH * 10.0f, normal,
-                                RE::COL_LAYER::kLOS);
+        float hitDist = RayCast(player, pos + RE::NiPoint3{0, 0, playerH}, rayDir, maxCheck, normal, RE::COL_LAYER::kLOS);
 
         // require the ray actually hit something above the water AND that that
         // distance is greater than your gap, AND that hit surface is roughly flat
         if (hitDist > 0.0f && abs(gap + playerH + 50 /** PlayerScale*/) < abs(hitDist) && normal.quad.m128_f32[2] > 0.8f) {
-            dive = 1;
+            return true;
         }
         //logger::info("hit {} - Water {}", hitDist, gap + playerH);
     }
 
-    player->SetGraphVariableInt("bSimpleDiving_IsDiving", dive);
-    //logger::info("set {}", dive);
-    return true;
+    return false;
 }

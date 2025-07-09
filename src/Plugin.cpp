@@ -58,8 +58,12 @@ namespace plugin {
     void MessageEvent(SKSE::MessagingInterface::Message *message) {
         if (message->type == SKSE::MessagingInterface::kPostPostLoad) {
             Hooks::AnimationEventHook<RE::BSAnimationGraphManager>::InstallAnimEventHook();
+            Hooks::NotifyGraphHandler::InstallGraphNotifyHook();
         }
-    }  // namespace plugin
+        else if (message->type == SKSE::MessagingInterface::kDataLoaded) {
+            plugin::Diving::SetPlayerRef(RE::PlayerCharacter::GetSingleton());
+        }
+    }
 
 }  // namespace plugin
 

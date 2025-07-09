@@ -4,6 +4,7 @@ using namespace SKSE::stl;
 
 #include "Plugin.h"
 #include "AnimEventHandler.hpp"
+#include "Conditions.h"
 
 namespace plugin {
     std::optional<std::filesystem::path> getLogDirectory() {
@@ -55,8 +56,32 @@ namespace plugin {
         spdlog::set_pattern(PLUGIN_LOGPATTERN_MINIMAL);
     }
 
+    template <typename T>
+    void RegisterCondition() {
+        using Result = OAR_API::Conditions::APIResult;
+        switch (OAR_API::Conditions::AddCustomCondition<T>()) {
+            case Result::OK:
+                logger::info("Registered {}", T::CONDITION_NAME);
+                break;
+            case Result::AlreadyRegistered:
+                logger::warn("Already registered {}", T::CONDITION_NAME);
+                break;
+            default:
+                logger::error("Failed to register {}", T::CONDITION_NAME);
+        }
+    }
+
     void MessageEvent(SKSE::MessagingInterface::Message *message) {
-        if (message->type == SKSE::MessagingInterface::kPostPostLoad) {
+        if (message->type == SKSE::MessagingInterface::kPostLoad) {
+            OAR_API::Conditions::GetAPI(OAR_API::Conditions::InterfaceVersion::V2);
+            if (!g_oarConditionsInterface) {
+                logger::error("OAR Conditions API unavailable");
+                return;
+            }
+
+            RegisterCondition<Conditions::IsDivingCondition>();
+        }
+        else if (message->type == SKSE::MessagingInterface::kPostPostLoad) {
             Hooks::AnimationEventHook<RE::BSAnimationGraphManager>::InstallAnimEventHook();
             Hooks::NotifyGraphHandler::InstallGraphNotifyHook();
         }

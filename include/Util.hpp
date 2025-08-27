@@ -1,20 +1,33 @@
 ﻿#pragma once
 
-float RayCast(RE::Actor *player, RE::NiPoint3 rayStart, RE::NiPoint3 rayDir, float maxDist, RE::hkVector4 &normalOut,
-              RE::COL_LAYER layerMask) {
+struct RayCastResult {
+        float distance = -1.0f;
+        RE::COL_LAYER layer = RE::COL_LAYER::kUnidentified;
+        RE::hkVector4 normalOut = RE::hkVector4(0, 0, 0, 0);
+        bool didHit = false;
+
+        RayCastResult() = default;
+
+        RayCastResult(float d, RE::COL_LAYER l, const RE::hkVector4 &n, bool h)
+            : distance(d), layer(l), normalOut(n), didHit(h) {}
+};
+
+RayCastResult RayCast(RE::Actor *actor, RE::NiPoint3 rayStart, RE::NiPoint3 rayDir, float maxDist, RE::COL_LAYER layerMask) {
+    const auto &player = actor;
+
+    RayCastResult result{};
+    result.distance = maxDist;
+
     if (!player) {
-        normalOut = RE::hkVector4(0.0f, 0.0f, 0.0f, 0.0f);
-        return maxDist;  // Return maxDist if player is null
+        return result;
     }
     const auto cell = player->GetParentCell();
     if (!cell) {
-        normalOut = RE::hkVector4(0.0f, 0.0f, 0.0f, 0.0f);
-        return maxDist;  // Return maxDist if cell is unavailable
+        return result;
     }
     const auto bhkWorld = cell->GetbhkWorld();
     if (!bhkWorld) {
-        normalOut = RE::hkVector4(0.0f, 0.0f, 0.0f, 0.0f);
-        return maxDist;  // Return maxDist if Havok world is unavailable
+        return result;
     }
 
     RE::bhkPickData pickData;
@@ -25,48 +38,28 @@ float RayCast(RE::Actor *player, RE::NiPoint3 rayStart, RE::NiPoint3 rayDir, flo
     pickData.rayInput.to = (rayStart + rayDir * maxDist) * havokWorldScale;
 
     // Set the collision filter info to exclude the player
-    uint32_t collisionFilterInfo = 0;
-    player->GetCollisionFilterInfo(collisionFilterInfo);
-    pickData.rayInput.filterInfo = (collisionFilterInfo & 0xFFFF0000) | static_cast<uint32_t>(layerMask);
+    /* hkpCollidable.h, lower 4 bits: CollidesWith, higher 4 bits: BelongsTo */
+
+    //static_cast<uint32_t>(COL_LAYER::kAnimStatic) & ~static_cast<uint32_t>(COL_LAYER::kDoorDetection)
+
+    RE::CFilter cFilter;
+    player->GetCollisionFilterInfo(cFilter);
+    cFilter.SetCollisionLayer(static_cast<RE::COL_LAYER>(layerMask));
+    pickData.rayInput.filterInfo = cFilter;
+    // static_cast<RE::CFilter>(cFilter.filter | static_cast<uint32_t>(layerMask));
 
     // Perform the raycast
     if (bhkWorld->PickObject(pickData) && pickData.rayOutput.HasHit()) {
-        normalOut = pickData.rayOutput.normal;
+        result.didHit = true;
+        result.distance = maxDist * pickData.rayOutput.hitFraction;
+        result.normalOut = pickData.rayOutput.normal;
 
-        const uint32_t layerIndex = pickData.rayOutput.rootCollidable->broadPhaseHandle.collisionFilterInfo & 0x7F;
+        const RE::COL_LAYER layer = static_cast<RE::COL_LAYER>(pickData.rayOutput.rootCollidable->GetCollisionLayer());
 
-        if (layerIndex == 0) {
-            return -1.0f;  // Invalid layer hit
-        }
-
-        // Optionally log the layer hit
-        // if (logLayer) logger::info("\nLayer hit: {}", layerIndex);
-
-        // Check for useful collision layers
-        switch (static_cast<RE::COL_LAYER>(layerIndex)) {
-            case RE::COL_LAYER::kStatic:
-            case RE::COL_LAYER::kCollisionBox:
-            case RE::COL_LAYER::kTerrain:
-            case RE::COL_LAYER::kGround:
-            case RE::COL_LAYER::kProps:
-            case RE::COL_LAYER::kDoorDetection:
-            case RE::COL_LAYER::kTrees:
-            case RE::COL_LAYER::kClutterLarge:
-            case RE::COL_LAYER::kAnimStatic:
-            case RE::COL_LAYER::kDebrisLarge:
-                // Update last hit object type
-                return maxDist * pickData.rayOutput.hitFraction;
-
-            default:
-                return -1.0f;  // Ignore unwanted layers
-        }
+        result.layer = layer;
     }
 
-    // No hit
-    normalOut = RE::hkVector4(0.0f, 0.0f, 0.0f, 0.0f);
-    // if (logLayer) logger::info("Nothing hit");
-
-    return maxDist;
+    return result;
 }
 
 bool UpdateDivingState(RE::Actor *player) {
@@ -100,15 +93,15 @@ bool UpdateDivingState(RE::Actor *player) {
     if (gap > 0.0f) {
         // precompute player height
         constexpr float playerH = 120.0f /** PlayerScale*/;
-        constexpr float maxCheck = playerH * 1000.0f;
+        constexpr float maxCheck = playerH * 2000.0f;
         constexpr RE::NiPoint3 rayDir{0, 0, -1};
-        RE::hkVector4 normal;
 
-        float hitDist = RayCast(player, pos + RE::NiPoint3{0, 0, playerH}, rayDir, maxCheck, normal, RE::COL_LAYER::kLOS);
+        RayCastResult ray = RayCast(player, pos + RE::NiPoint3{0, 0, playerH}, rayDir, maxCheck, RE::COL_LAYER::kLOS);
 
         // require the ray actually hit something above the water AND that that
         // distance is greater than your gap, AND that hit surface is roughly flat
-        if (hitDist > 0.0f && abs(gap + playerH + 50 /** PlayerScale*/) < abs(hitDist) && normal.quad.m128_f32[2] > 0.8f) {
+        if (ray.didHit && ray.distance > 0.0f && abs(gap + playerH + 50 /** PlayerScale*/) < abs(ray.distance) &&
+            ray.normalOut.quad.m128_f32[2] > 0.8f) {
             return true;
         }
         //logger::info("hit {} - Water {}", hitDist, gap + playerH);

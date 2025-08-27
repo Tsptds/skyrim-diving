@@ -3,7 +3,8 @@ using namespace SKSE::log;
 using namespace SKSE::stl;
 
 #include "Plugin.h"
-#include "AnimEventHandler.hpp"
+#include "CameraHook.hpp"
+#include "Runtime.hpp"
 
 namespace plugin {
     std::optional<std::filesystem::path> getLogDirectory() {
@@ -57,8 +58,7 @@ namespace plugin {
 
     void MessageEvent(SKSE::MessagingInterface::Message *message) {
         if (message->type == SKSE::MessagingInterface::kPostPostLoad) {
-            Hooks::AnimationEventHook<RE::BSAnimationGraphManager>::InstallAnimEventHook();
-            Hooks::NotifyGraphHandler::InstallGraphNotifyHook();
+            Hooks::CameraHandler::InstallCamStateHooks();
         }
         else if (message->type == SKSE::MessagingInterface::kDataLoaded) {
             plugin::Diving::SetPlayerRef(RE::PlayerCharacter::GetSingleton());
